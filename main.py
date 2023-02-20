@@ -117,8 +117,7 @@ def print_table(table: dict) -> None:
 
 
 def main():
-    # pdf_url = get_url()
-    url = "http://handball.org.hk/2_Competition/2018-2019/%e8%81%af%e8%b3%bd/(190)%202018_LAEGUE_TIMETABLE_2020.08.15.pdf"
+    url = get_url()
     matches = get_matches(url)
     tables = get_tables(matches)
     for division in DIVISIONS:
