@@ -31,9 +31,13 @@ def get_url() -> str:
     return f"http://handball.org.hk/{pdf_link}"
 
 
-def get_score(score_str: str) -> tuple[int]:
-    score_parts = score_str.split(" (")
+def get_score(result_str: str) -> tuple[int]:
+    score_parts = result_str.split(" (")
     return tuple(int(score) for score in score_parts[0].split(":"))
+
+
+def get_withdraw_team(result_str: str) -> str:
+    return result_str.split()[0]
 
 
 def get_matches(path: str) -> dict:
@@ -46,11 +50,23 @@ def get_matches(path: str) -> dict:
             values: list[str] = [
                 v for v in values if not isinstance(v, float) or not np.isnan(v)
             ]
-            if values[-1].count(":") != 2:
+            result_str = values[-1]
+            if result_str.count(":") != 2 and ("棄權" not in result_str):
                 continue
             home_team: str = values[-3]
             away_team: str = values[-2]
-            home_score, away_score = get_score(values[-1])
+            if "棄權" in result_str:
+                withdraw_team = get_withdraw_team(result_str)
+                if withdraw_team not in (home_team, away_team):
+                    raise ValueError(
+                        f"{withdraw_team} does not match either {home_team} or {away_team}"
+                    )
+                home_score, away_score = (
+                    (0, 12) if withdraw_team == home_team else (12, 0)
+                )
+            else:
+                withdraw_team = None
+                home_score, away_score = get_score(result_str)
             matches.append(
                 {
                     "id": int(values[0]),
@@ -63,6 +79,7 @@ def get_matches(path: str) -> dict:
                     else away_team,
                     "home_score": home_score,
                     "away_score": away_score,
+                    "withdraw": withdraw_team,
                 }
             )
 
@@ -86,7 +103,6 @@ def get_tables(matches: dict) -> dict:
         away_team = match["away_team"]
         home_score = match["home_score"]
         away_score = match["away_score"]
-
         home_points, away_points = calculate_points(home_score, away_score)
 
         tables[division][home_team]["played"] += 1
@@ -95,6 +111,9 @@ def get_tables(matches: dict) -> dict:
         tables[division][away_team]["goal_dif"] += away_score - home_score
         tables[division][home_team]["points"] += home_points
         tables[division][away_team]["points"] += away_points
+
+        if withdraw := match["withdraw"]:
+            tables[division][withdraw]["points"] -= 1
 
     return tables
 
@@ -119,6 +138,7 @@ def print_table(table: dict) -> None:
 def main():
     url = get_url()
     matches = get_matches(url)
+    print(len(matches))
     tables = get_tables(matches)
     for division in DIVISIONS:
         print(division)
