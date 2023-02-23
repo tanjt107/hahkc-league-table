@@ -36,7 +36,7 @@ def get_score(result_str: str) -> tuple[int]:
     return tuple(int(score) for score in score_parts[0].split(":"))
 
 
-def get_withdraw_team(result_str: str) -> str:
+def get_walkover_team(result_str: str) -> str:
     return result_str.split()[0]
 
 
@@ -56,16 +56,16 @@ def get_matches(path: str) -> dict:
             home_team: str = values[-3]
             away_team: str = values[-2]
             if "棄權" in result_str:
-                withdraw_team = get_withdraw_team(result_str)
-                if withdraw_team not in (home_team, away_team):
+                walkover_team = get_walkover_team(result_str)
+                if walkover_team not in (home_team, away_team):
                     raise ValueError(
-                        f"{withdraw_team} does not match either {home_team} or {away_team}"
+                        f"{walkover_team} does not match either {home_team} or {away_team}"
                     )
                 home_score, away_score = (
-                    (0, 12) if withdraw_team == home_team else (12, 0)
+                    (0, 12) if walkover_team == home_team else (12, 0)
                 )
             else:
-                withdraw_team = None
+                walkover_team = None
                 home_score, away_score = get_score(result_str)
             matches.append(
                 {
@@ -79,7 +79,7 @@ def get_matches(path: str) -> dict:
                     else away_team,
                     "home_score": home_score,
                     "away_score": away_score,
-                    "withdraw": withdraw_team,
+                    "walkover": walkover_team,
                 }
             )
 
@@ -112,8 +112,8 @@ def get_tables(matches: dict) -> dict:
         tables[division][home_team]["points"] += home_points
         tables[division][away_team]["points"] += away_points
 
-        if withdraw := match["withdraw"]:
-            tables[division][withdraw]["points"] -= 1
+        if walkover := match["walkover"]:
+            tables[division][walkover]["points"] -= 1
 
     return tables
 
