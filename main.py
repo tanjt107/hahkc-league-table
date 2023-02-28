@@ -21,6 +21,8 @@ DIVISIONS = [
     "女丙 B 組",
 ]
 
+TYPOS = {"Citysuper": "CITYSUPER", "Akita": "AKITA", "梁球琚": "梁銶琚"}
+
 
 def get_url() -> str:
     response = requests.get("http://handball.org.hk/competition.htm")
@@ -71,12 +73,8 @@ def get_matches(path: str) -> dict:
                 {
                     "id": int(values[0]),
                     "division": values[-4],
-                    "home_team": home_team.upper()
-                    if home_team.isalpha()
-                    else home_team,
-                    "away_team": away_team.upper()
-                    if away_team.isalpha()
-                    else away_team,
+                    "home_team": TYPOS.get(home_team, home_team),
+                    "away_team": TYPOS.get(away_team, away_team),
                     "home_score": home_score,
                     "away_score": away_score,
                     "walkover": walkover_team,
