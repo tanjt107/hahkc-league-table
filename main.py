@@ -49,14 +49,10 @@ def get_matches(path: str) -> dict:
     for df in dfs:
         df = df.dropna(subset=[df.columns[0]])
         for values in df.values.tolist():
-            values: list[str] = [
-                v for v in values if not isinstance(v, float) or not np.isnan(v)
-            ]
-            result_str = values[-1]
+            values = [v for v in values if not isinstance(v, float) or not np.isnan(v)]
+            *_, division, home_team, away_team, result_str = values
             if result_str.count(":") != 2 and ("棄權" not in result_str):
                 continue
-            home_team: str = values[-3]
-            away_team: str = values[-2]
             if "棄權" in result_str:
                 walkover_team = get_walkover_team(result_str)
                 if walkover_team not in (home_team, away_team):
@@ -72,7 +68,7 @@ def get_matches(path: str) -> dict:
             matches.append(
                 {
                     "id": int(values[0]),
-                    "division": values[-4],
+                    "division": division,
                     "home_team": TYPOS.get(home_team, home_team),
                     "away_team": TYPOS.get(away_team, away_team),
                     "home_score": home_score,
@@ -103,40 +99,32 @@ def get_tables(matches: dict) -> dict:
         away_score = match["away_score"]
         home_points, away_points = calculate_points(home_score, away_score)
 
-        tables[division][home_team]["played"] += 1
-        tables[division][away_team]["played"] += 1
-        tables[division][home_team]["goal_dif"] += home_score - away_score
-        tables[division][away_team]["goal_dif"] += away_score - home_score
-        tables[division][home_team]["points"] += home_points
-        tables[division][away_team]["points"] += away_points
+        tables[division][home_team]["Matches Played"] += 1
+        tables[division][away_team]["Matches Played"] += 1
+        tables[division][home_team]["Goal Difference"] += home_score - away_score
+        tables[division][away_team]["Goal Difference"] += away_score - home_score
+        tables[division][home_team]["Points"] += home_points
+        tables[division][away_team]["Points"] += away_points
 
         if walkover := match["walkover"]:
-            tables[division][walkover]["points"] -= 1
+            tables[division][walkover]["Points"] -= 1
 
     return tables
 
 
 def print_table(table: dict) -> None:
-    teams = [{"team": team, **stat} for team, stat in table.items()]
-    teams = sorted(teams, key=lambda x: (x["points"], x["goal_dif"]), reverse=True)
+    teams = [{"Team": team, **stat} for team, stat in table.items()]
+    teams = sorted(
+        teams, key=lambda x: (x["Points"], x["Goal Difference"]), reverse=True
+    )
     print(
-        tabulate(
-            teams,
-            headers={
-                "team": "Team",
-                "played": "Matches Played",
-                "goal_dif": "Goal Difference",
-                "points": "Points",
-            },
-            tablefmt="github",
-        ),
+        tabulate(teams, headers="keys"),
     )
 
 
 def main():
     url = get_url()
     matches = get_matches(url)
-    print(len(matches))
     tables = get_tables(matches)
     for division in DIVISIONS:
         print(division)
