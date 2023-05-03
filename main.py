@@ -34,12 +34,12 @@ def get_url() -> str:
 
 
 def get_score(result_str: str) -> tuple[int]:
-    score_parts = result_str.split(" (")
-    return tuple(int(score) for score in score_parts[0].split(":"))
+    score_parts = result_str.split("(")[0].strip()
+    return tuple(int(score) for score in score_parts.split(":"))
 
 
 def get_walkover_team(result_str: str) -> str:
-    return result_str.split()[0]
+    return result_str.split("棄權")[0].strip()
 
 
 def get_matches(path: str) -> dict:
