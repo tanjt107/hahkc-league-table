@@ -2,4 +2,5 @@ numpy
 beautifulsoup4
 tabula-py
 tabulate
+tabulate[widechars]
 requests
