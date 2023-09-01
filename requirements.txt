@@ -1,0 +1,5 @@
+numpy
+beautifulsoup4
+tabula-py
+tabulate
+requests

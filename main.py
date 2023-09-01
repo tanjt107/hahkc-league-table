@@ -1,8 +1,8 @@
+from collections import defaultdict
 import numpy as np
 import tabula
 import requests
 from bs4 import BeautifulSoup
-from collections import defaultdict
 from tabulate import tabulate
 
 DIVISIONS = [
